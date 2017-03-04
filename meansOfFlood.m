@@ -5,14 +5,14 @@ function [red, green, blue] = meansOfFlood()
     Dir = 'training\';
     % Read images from Images folder
     Imgs = dir(fullfile(Dir, '*.jpg'));
-    for j=1:length(Imgs)
-        Img = imread(fullfile(Dir, Imgs(j).name));  % Read image
+    for i=1:length(Imgs)
+        Img = imread(fullfile(Dir, Imgs(i).name));  % Read image
 
         Img = double(Img);
 
-        redMeans(j) = mean( reshape( Img(:,:,1), [], 1 ));
-        greenMeans(j) = mean( reshape( Img(:,:,2), [], 1 ));
-        blueMeans(j) = mean( reshape( Img(:,:,3), [], 1 ));
+        redMeans(i) = mean( reshape( Img(:,:,1), [], 1 ));
+        greenMeans(i) = mean( reshape( Img(:,:,2), [], 1 ));
+        blueMeans(i) = mean( reshape( Img(:,:,3), [], 1 ));
 
     end
 

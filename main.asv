@@ -7,7 +7,7 @@ close all;
 
 [redMean, greenMean, blueMean] = meansOfFlood();
 
-img = imread('c/c1.jpg');
+img = imread('test2.png');
 
 [row col dim] = size(img);
 
@@ -34,13 +34,13 @@ for x=1:1:row
     end
 end
 
-% sedisk = strel('disk',4);
-% closedIm = imclose(biIm, sedisk);
+sedisk = strel('disk',2);
+closedIm = imclose(biIm, sedisk);
 
-numberOfPixels = numel(biIm);
-removeTh = round(numberOfPixels - numberOfPixels * 90 / 100); % remove when pixel number 20% less than total pixel; 
-
-filteredIm = bwareaopen(biIm, removeTh);
+numberOfPixels = numel(closedIm);
+removeTh = round(numberOfPixels - numberOfPixels * 95 / 100); % remove when pixel number 20% less than total pixel; 
+disp(removeTh);
+filteredIm = bwareaopen(closedIm, removeTh);
 
 for x=1:1:row
     for y=1:1:col
