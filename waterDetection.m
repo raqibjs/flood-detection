@@ -2,32 +2,33 @@ clc;
 clear all;
 close all;
 
-% Calculate mean from traing water images
+%% Calculate mean from traing water images
 [redMean, greenMean, blueMean] = meansOfFlood();
 
+%% Get video sequences
 videoObj = VideoReader('no-water2.mp4');
 
-% Get all frame
+%% Get all frame from the video object
 nframes = get(videoObj, 'NumberOfFrames');
 
-% Take one frame to make a result container
+%% Take one frame to make a result container
 I = read(videoObj, 1);
-% Result container
+
+%% Result container
 results = zeros([size(I,1) size(I,2) 3 nframes], class(I));
 
-% For every frame
+%% For every frame
 for k = 1 : nframes
+    tic;
     img = read(videoObj, k);
     [row col dim] = size(img);
     im = double(img);
-
-%     imGray = rgb2gray(img);
-%     edgeIm = edge(imGray, 'canny');
 
     red = im(:, :, 1);
     green = im(:, :, 2);
     blue = im(:, :, 3);
 
+    %% Color analysis
     for x=1:1:row
         for y=1:1:col
             redVal = abs(red(x,y) - redMean);
@@ -42,19 +43,30 @@ for k = 1 : nframes
         end
     end
 
-    % Remove noise effect and narrow connection
+    %% Remove noise effect and narrow connection
     numberOfPixels = numel(biIm);
-    
+
     sedisk = strel('disk',2);
     openedIm = imopen(biIm, sedisk);
-    
-    % Filling small holes for better result
+
+    %% Filling small holes inside detected region
     closedIm = imclose(openedIm, sedisk);
-    
-    % Delete small objects
+
+    %% Delete small objects
     removeTh = round(numberOfPixels - numberOfPixels * 92 / 100); % remove when pixel number 8% less than total pixel; 
     filteredIm = bwareaopen(closedIm, removeTh);
 
+    %% Give warning if water logged area found
+    numberOfTruePixels = sum(filteredIm(:));
+    if(numberOfTruePixels > 0)
+        disp('Warning: Water logged area! ');
+    else
+        disp('No Water');
+    end
+
+    toc;
+
+    %% Making output image
     for x=1:1:row
         for y=1:1:col
             if(filteredIm(x,y) > 0)
@@ -68,11 +80,11 @@ for k = 1 : nframes
             end
         end
     end
-    
-    % Make RGB image from individual R, G, B plane
+
+    %% Make RGB image from individual R, G, B plane
     newIm = cat(3, red, green, blue);
     
-    % Store processed image into result container
+    %% Store processed image into result container
     results(:,:,:,k) = newIm;
 end
 

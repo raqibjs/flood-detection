@@ -9,17 +9,15 @@ close all;
 
 tic;
 
-img = imread('no-water2.png');
+img = imread('test1.jpg');
 [row col dim] = size(img);
 im = double(img);
-
-%     imGray = rgb2gray(img);
-%     edgeIm = edge(imGray, 'canny');
 
 red = im(:, :, 1);
 green = im(:, :, 2);
 blue = im(:, :, 3);
 
+%% Color analysis
 for x=1:1:row
     for y=1:1:col
         redVal = abs(red(x,y) - redMean);
@@ -34,21 +32,30 @@ for x=1:1:row
     end
 end
 
-% Remove noise effect and narrow connection
+%% Remove noise effect and narrow connection
 numberOfPixels = numel(biIm);
 
 sedisk = strel('disk',2);
 openedIm = imopen(biIm, sedisk);
 
-% Filling small holes for better result
+%% Filling small holes inside detected region
 closedIm = imclose(openedIm, sedisk);
 
-% Delete small objects
+%% Delete small objects
 removeTh = round(numberOfPixels - numberOfPixels * 92 / 100); % remove when pixel number 8% less than total pixel; 
 filteredIm = bwareaopen(closedIm, removeTh);
-disp('Water Found!');
+
+%% Give warning if water logged area found
+numberOfTruePixels = sum(filteredIm(:));
+if(numberOfTruePixels > 0)
+    disp('Warning: Water logged area! ');
+else
+    disp('No Water');
+end
+
 toc;
 
+%% Making output image
 for x=1:1:row
     for y=1:1:col
         if(filteredIm(x,y) > 0)
@@ -63,7 +70,7 @@ for x=1:1:row
     end
 end
 
-% Make RGB image from individual R, G, B plane
+%% Make RGB image from individual R, G, B plane
 newIm = cat(3, red, green, blue);
 
 subplot(1,2,1);
