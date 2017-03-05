@@ -2,22 +2,27 @@ clc;
 clear all;
 close all;
 
+% Calculate mean from traing water images
 [redMean, greenMean, blueMean] = meansOfFlood();
 
-trafficObj = VideoReader('water4.mp4');
+videoObj = VideoReader('no-water2.mp4');
 
-nframes = get(trafficObj, 'NumberOfFrames');
-I = read(trafficObj, 1);
+% Get all frame
+nframes = get(videoObj, 'NumberOfFrames');
+
+% Take one frame to make a result container
+I = read(videoObj, 1);
+% Result container
 results = zeros([size(I,1) size(I,2) 3 nframes], class(I));
 
+% For every frame
 for k = 1 : nframes
-    img = read(trafficObj, k);
+    img = read(videoObj, k);
     [row col dim] = size(img);
-
     im = double(img);
 
-    imGray = rgb2gray(img);
-    edgeIm = edge(imGray, 'canny');
+%     imGray = rgb2gray(img);
+%     edgeIm = edge(imGray, 'canny');
 
     red = im(:, :, 1);
     green = im(:, :, 2);
@@ -37,31 +42,39 @@ for k = 1 : nframes
         end
     end
 
-%     sedisk = strel('disk',2);
-%     closedIm = imclose(biIm, sedisk);
-
+    % Remove noise effect and narrow connection
     numberOfPixels = numel(biIm);
-    removeTh = round(numberOfPixels - numberOfPixels * 90 / 100); % remove when pixel number 20% less than total pixel;
-    filteredIm = bwareaopen(biIm, removeTh);
+    
+    sedisk = strel('disk',2);
+    openedIm = imopen(biIm, sedisk);
+    
+    % Filling small holes for better result
+    closedIm = imclose(openedIm, sedisk);
+    
+    % Delete small objects
+    removeTh = round(numberOfPixels - numberOfPixels * 92 / 100); % remove when pixel number 8% less than total pixel; 
+    filteredIm = bwareaopen(closedIm, removeTh);
 
     for x=1:1:row
         for y=1:1:col
             if(filteredIm(x,y) > 0)
+                red(x,y) = 255;
+                green(x,y) = 0;
+                blue(x,y) = 0;
+            else
                 red(x,y) = red(x,y);
                 green(x,y) = green(x,y);
                 blue(x,y) = blue(x,y);
-            else
-                red(x,y) = 0;
-                green(x,y) = 0;
-                blue(x,y) = 0;
             end
         end
     end
+    
+    % Make RGB image from individual R, G, B plane
     newIm = cat(3, red, green, blue);
-     
-     
-     results(:,:,:,k) = newIm;
+    
+    % Store processed image into result container
+    results(:,:,:,k) = newIm;
 end
 
-frameRate = get(trafficObj,'FrameRate');
+frameRate = get(videoObj,'FrameRate');
 implay(results,frameRate);
